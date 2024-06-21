@@ -1,0 +1,29 @@
+
+# Ignore temporary Emacs files
+*~
+
+#Ignore Eclipse directories
+.settings
+.project
+.classpath
+.pydevproject
+.metadata
+.idea
+*.iml
+
+.DS_Store
+
+# Exclude build directory
+target/*
+.
+/target
+
+logs/
+
+*.pyc
+
+pom.xml.releaseBackup
+release.properties
+pom.xml.versionsBackup
+
+cadsr-exec-tmp/
