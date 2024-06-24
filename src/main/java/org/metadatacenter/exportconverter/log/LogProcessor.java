@@ -1,14 +1,9 @@
 package org.metadatacenter.exportconverter.log;
 
-import com.fasterxml.jackson.core.util.DefaultIndenter;
-import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
-import com.fasterxml.jackson.core.util.Separators;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import org.metadatacenter.artifacts.model.tools.CustomPrettyPrinter;
+import org.metadatacenter.exportconverter.tools.PrettyObjectMapper;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -16,15 +11,6 @@ import java.nio.file.Paths;
 
 public class LogProcessor {
   private String folderPrefix;
-
-  private static ObjectWriter PRETTY_OBJECT_WRITER;
-  static {
-    ObjectMapper mapper = new ObjectMapper();
-    mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-    mapper.registerModule(new JavaTimeModule());
-    DefaultPrettyPrinter prettyPrinter = new CustomPrettyPrinter();
-    PRETTY_OBJECT_WRITER = mapper.writer(prettyPrinter);
-  }
 
 
   public LogProcessor(String folderPrefix) {
@@ -62,7 +48,8 @@ public class LogProcessor {
   private void saveLogObject(ResourceLog logObject, String uuid, String shardFolder) throws IOException {
     Path filePath = Paths.get(shardFolder, uuid + ".json");
     Files.createDirectories(filePath.getParent());
-    PRETTY_OBJECT_WRITER.writeValue(filePath.toFile(), logObject);
+    ObjectWriter prettyObjectWriter = PrettyObjectMapper.PRETTY_OBJECT_WRITER;
+    prettyObjectWriter.writeValue(filePath.toFile(), logObject);
   }
 }
 

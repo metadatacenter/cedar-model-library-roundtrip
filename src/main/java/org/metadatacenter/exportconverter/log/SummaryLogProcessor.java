@@ -1,6 +1,7 @@
 package org.metadatacenter.exportconverter.log;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.metadatacenter.exportconverter.tools.PrettyObjectMapper;
 
 import java.io.File;
 import java.io.IOException;
@@ -19,8 +20,7 @@ public class SummaryLogProcessor {
   public void saveLogObject(List<SummaryLog> logObject) {
     String filePath = Paths.get(folderPrefix, "summary.json").toString();
     try {
-      ObjectMapper mapper = new ObjectMapper();
-      mapper.writerWithDefaultPrettyPrinter().writeValue(new File(filePath), logObject);
+      PrettyObjectMapper.PRETTY_OBJECT_WRITER.writeValue(new File(filePath), logObject);
     } catch (IOException e) {
       e.printStackTrace();
     }
@@ -42,8 +42,7 @@ public class SummaryLogProcessor {
     List<ErrorStat> transformedAndSortedErrorStats = transformAndSortErrorStats(errorStats);
     String filePath = Paths.get(folderPrefix, fileName).toString();
     try {
-      ObjectMapper mapper = new ObjectMapper();
-      mapper.writerWithDefaultPrettyPrinter().writeValue(new File(filePath), transformedAndSortedErrorStats);
+      PrettyObjectMapper.PRETTY_OBJECT_WRITER.writeValue(new File(filePath), transformedAndSortedErrorStats);
     } catch (IOException e) {
       e.printStackTrace();
     }
