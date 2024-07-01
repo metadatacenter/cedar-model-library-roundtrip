@@ -30,7 +30,7 @@ public class TemplateContentComparator implements JsonComparator {
     if (original.isObject()) {
       original.fieldNames().forEachRemaining(fieldName -> {
         if (!reSerialized.has(fieldName)) {
-          result.addComparisonError(new ComparisonError(location, org.metadatacenter.exportconverter.model.ComparisonErrorType.MISSING_KEY_IN_REAL_OBJECT, path, null, null));
+          result.addComparisonError(new ComparisonError(location, ComparisonErrorType.MISSING_KEY_IN_REAL_OBJECT, path, null, null));
         } else {
           compareJsonNodes(location, path.add(fieldName), original.get(fieldName), reSerialized.get(fieldName), result);
         }
