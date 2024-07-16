@@ -10,7 +10,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
 
-public class ProcessExport {
+public class ProcessExportGenerateJson {
   public static void main(String[] args) throws IOException {
     System.out.println("Reading config");
     SystemComponent systemComponent = SystemComponent.ADMIN_TOOL;
@@ -24,7 +24,7 @@ public class ProcessExport {
 
     ExportResourceEnumerator enumerator = new ExportResourceEnumerator(sourceDir, targetDir);
     Instant startedAt = Instant.now();
-    enumerator.parse();
+    enumerator.parseAndOutputJson();
     Instant completedAt = Instant.now();
     System.out.println("Parsing started at   " + startedAt);
     System.out.println("Parsing completed at " + completedAt);

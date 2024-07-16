@@ -61,12 +61,22 @@
         <executions>
 
           <execution>
-            <id>processexport</id>
+            <id>processExportGenerateJson</id>
             <goals>
               <goal>java</goal>
             </goals>
             <configuration>
-              <mainClass>org.metadatacenter.exportconverter.tools.ProcessExport</mainClass>
+              <mainClass>org.metadatacenter.exportconverter.tools.ProcessExportGenerateJson</mainClass>
+            </configuration>
+          </execution>
+
+          <execution>
+            <id>processExportGenerateYaml</id>
+            <goals>
+              <goal>java</goal>
+            </goals>
+            <configuration>
+              <mainClass>org.metadatacenter.exportconverter.tools.ProcessExportGenerateYaml</mainClass>
             </configuration>
           </execution>
 
