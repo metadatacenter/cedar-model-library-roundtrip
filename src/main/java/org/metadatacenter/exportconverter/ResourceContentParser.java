@@ -10,13 +10,17 @@ public class ResourceContentParser {
   static ObjectMapper mapper = new ObjectMapper();
 
   public static ObjectNode parseContentJson(String content) throws IOException {
-    ObjectNode jsonObj = (ObjectNode) mapper.readTree(content);
+    if (content == null || content.isEmpty() || "null".equals(content)) {
+      return null;
+    } else {
+      ObjectNode jsonObj = (ObjectNode) mapper.readTree(content);
 
-    if (jsonObj.has("_id")) {
-      jsonObj.remove("_id"); // Remove the top-level _id node
+      if (jsonObj.has("_id")) {
+        jsonObj.remove("_id"); // Remove the top-level _id node
+      }
+
+      return jsonObj;
     }
-
-    return jsonObj;
   }
 }
 

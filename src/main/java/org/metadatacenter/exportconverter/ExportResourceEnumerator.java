@@ -9,6 +9,7 @@ import org.metadatacenter.artifacts.model.core.FieldSchemaArtifact;
 import org.metadatacenter.artifacts.model.core.TemplateSchemaArtifact;
 import org.metadatacenter.artifacts.model.reader.JsonSchemaArtifactReader;
 import org.metadatacenter.artifacts.model.renderer.JsonSchemaArtifactRenderer;
+import org.metadatacenter.artifacts.model.renderer.YamlArtifactRenderer;
 import org.metadatacenter.exportconverter.comparator.ElementContentComparator;
 import org.metadatacenter.exportconverter.comparator.FieldContentComparator;
 import org.metadatacenter.exportconverter.comparator.InstanceContentComparator;
@@ -17,6 +18,7 @@ import org.metadatacenter.exportconverter.log.*;
 import org.metadatacenter.exportconverter.model.CedarExportResource;
 import org.metadatacenter.exportconverter.model.ComparisonError;
 import org.metadatacenter.exportconverter.model.ComparisonResult;
+import org.metadatacenter.exportconverter.model.OutputFormat;
 import org.metadatacenter.exportconverter.wrapper.ErrorKey;
 
 import java.io.File;
@@ -48,6 +50,8 @@ public class ExportResourceEnumerator {
   private static JsonSchemaArtifactReader artifactReader;
   private static JsonSchemaArtifactRenderer jsonSchemaArtifactRenderer;
 
+  private static YamlArtifactRenderer yamlArtifactRenderer;
+
 
   public ExportResourceEnumerator(String sourceDir, String targetDir) {
     this.sourceDir = Path.of(sourceDir, "resources").toString();
@@ -64,16 +68,25 @@ public class ExportResourceEnumerator {
     this.jsonSchemaArtifactRenderer = new JsonSchemaArtifactRenderer();
   }
 
-  public void parse() {
+  public void parseAndOutputJson() {
     this.counter = 0;
-    parseDirectory(this.sourceDir, "");
+    parseDirectory(this.sourceDir, "", OutputFormat.JSON);
     summaryLogProcessor.saveLogObject(logSummary);
     summaryLogProcessor.saveErrorStats(errorStats, "errors-all.json");
     summaryLogProcessor.saveErrorStats(errorStatsLast2, "errors-last-2.json");
     System.out.println("Total logged: " + logSummary.size());
   }
 
-  private void parseDirectory(String directoryPath, String virtualPath) {
+  public void parseAndOutputYaml() {
+    this.counter = 0;
+    parseDirectory(this.sourceDir, "", OutputFormat.YAML);
+    summaryLogProcessor.saveLogObject(logSummary);
+    summaryLogProcessor.saveErrorStats(errorStats, "errors-all.json");
+    summaryLogProcessor.saveErrorStats(errorStatsLast2, "errors-last-2.json");
+    System.out.println("Total logged: " + logSummary.size());
+  }
+
+  private void parseDirectory(String directoryPath, String virtualPath, OutputFormat outputFormat) {
     File directory = new File(directoryPath);
     File[] shardDirectories = directory.listFiles(File::isDirectory);
     if (shardDirectories == null) {
@@ -90,7 +103,7 @@ public class ExportResourceEnumerator {
 
       for (File zipFile : zipFiles) {
         try {
-          processZipFile(zipFile.getAbsolutePath(), virtualPath);
+          processZipFile(zipFile.getAbsolutePath(), virtualPath, outputFormat);
         } catch (Exception e) {
           System.err.println("Error processing file " + zipFile.getAbsolutePath() + ": " + e.getMessage());
         }
@@ -98,7 +111,7 @@ public class ExportResourceEnumerator {
     }
   }
 
-  private void processZipFile(String zipFilePath, String virtualPath) throws IOException {
+  private void processZipFile(String zipFilePath, String virtualPath, OutputFormat outputFormat) throws IOException {
     try (ZipFile zipFile = new ZipFile(zipFilePath)) {
       ZipEntry resourceEntry = zipFile.getEntry("resource.json");
       if (resourceEntry == null) {
@@ -120,7 +133,7 @@ public class ExportResourceEnumerator {
         if ("folder".equals(cedarResource.getType())) {
           String contentFolderPath = zipFilePath.replace(".zip", "");
           if (Files.exists(Paths.get(contentFolderPath))) {
-            parseDirectory(contentFolderPath, cedarResource.getComputedPath());
+            parseDirectory(contentFolderPath, cedarResource.getComputedPath(), outputFormat);
           }
         } else {
           ZipEntry contentEntry = zipFile.getEntry("content.json");
@@ -128,7 +141,7 @@ public class ExportResourceEnumerator {
             try (InputStream contentStream = zipFile.getInputStream(contentEntry);
                  Scanner contentScanner = new Scanner(contentStream).useDelimiter("\\A")) {
               String contentJson = contentScanner.hasNext() ? contentScanner.next() : "";
-              handleContentJson(cedarResource, contentJson);
+              handleContentJson(cedarResource, contentJson, outputFormat);
             }
           }
         }
@@ -136,12 +149,13 @@ public class ExportResourceEnumerator {
     }
   }
 
-  private void handleContentJson(CedarExportResource cedarResource, String contentJson) {
+  private void handleContentJson(CedarExportResource cedarResource, String contentJson, OutputFormat outputFormat) {
     List<ComparisonError> parsingResultErrors = new ArrayList<>();
     List<ComparisonError> compareResultErrors = new ArrayList<>();
     List<ComparisonError> compareResultWarnings = new ArrayList<>();
     ObjectNode parsedContent = null;
     ObjectNode reSerialized = null;
+    LinkedHashMap<String, Object> yamlSerialized = null;
 
     Exception exception = null;
 
@@ -149,34 +163,54 @@ public class ExportResourceEnumerator {
 
     try {
       parsedContent = ResourceContentParser.parseContentJson(contentJson);
-      String topDescription = null;
-      JsonNode topDescriptionNode = parsedContent.get("description");
-      if (topDescriptionNode != null) {
-        topDescription = topDescriptionNode.textValue();
-      }
-      if ("Generated by CSV2CEDAR.".equals(topDescription)) {
+      if (parsedContent != null) {
+        String topDescription = null;
+        JsonNode topDescriptionNode = parsedContent.get("description");
+        if (topDescriptionNode != null) {
+          topDescription = topDescriptionNode.textValue();
+        }
+        if ("Generated by CSV2CEDAR.".equals(topDescription)) {
+          doSave = false;
+        }
+      } else {
         doSave = false;
       }
-
       if (doSave) {
         switch (cedarResource.getType()) {
           case "template":
             TemplateSchemaArtifact template = artifactReader.readTemplateSchemaArtifact(parsedContent);
-            reSerialized = jsonSchemaArtifactRenderer.renderTemplateSchemaArtifact(template);
-            compareResults(templateContentComparator.compare(parsedContent, reSerialized));
+            if (outputFormat == OutputFormat.JSON) {
+              reSerialized = jsonSchemaArtifactRenderer.renderTemplateSchemaArtifact(template);
+              compareJsonResults(templateContentComparator.compare(parsedContent, reSerialized));
+            } else if (outputFormat == OutputFormat.YAML) {
+              yamlSerialized = yamlArtifactRenderer.renderTemplateSchemaArtifact(template);
+              handleYamlResults(parsedContent, yamlSerialized);
+            }
             break;
           case "element":
             ElementSchemaArtifact element = artifactReader.readElementSchemaArtifact(parsedContent);
-            reSerialized = jsonSchemaArtifactRenderer.renderElementSchemaArtifact(element);
-            compareResults(elementContentComparator.compare(parsedContent, reSerialized));
+            if (outputFormat == OutputFormat.JSON) {
+              reSerialized = jsonSchemaArtifactRenderer.renderElementSchemaArtifact(element);
+              compareJsonResults(elementContentComparator.compare(parsedContent, reSerialized));
+            } else if (outputFormat == OutputFormat.YAML) {
+              yamlSerialized = yamlArtifactRenderer.renderElementSchemaArtifact(element);
+              handleYamlResults(parsedContent, yamlSerialized);
+            }
             break;
           case "field":
             FieldSchemaArtifact field = artifactReader.readFieldSchemaArtifact(parsedContent);
-            reSerialized = jsonSchemaArtifactRenderer.renderFieldSchemaArtifact(field);
-            compareResults(fieldContentComparator.compare(parsedContent, reSerialized));
+            if (outputFormat == OutputFormat.JSON) {
+              reSerialized = jsonSchemaArtifactRenderer.renderFieldSchemaArtifact(field);
+              compareJsonResults(fieldContentComparator.compare(parsedContent, reSerialized));
+            } else if (outputFormat == OutputFormat.YAML) {
+              yamlSerialized = yamlArtifactRenderer.renderFieldSchemaArtifact(field);
+              handleYamlResults(parsedContent, yamlSerialized);
+            }
             break;
           case "instance":
-            compareResults(instanceContentComparator.compare(parsedContent, reSerialized));
+            if (outputFormat == OutputFormat.JSON) {
+              compareJsonResults(instanceContentComparator.compare(parsedContent, reSerialized));
+            }
             doSave = false;
             break;
         }
@@ -191,6 +225,16 @@ public class ExportResourceEnumerator {
     }
   }
 
+  private void handleYamlResults(ObjectNode parsedContent, LinkedHashMap<String, Object> yamlSerialized) {
+//    YAMLFactory yamlFactory = new YAMLFactory().disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER)
+//        .enable(YAMLGenerator.Feature.MINIMIZE_QUOTES).enable(YAMLGenerator.Feature.INDENT_ARRAYS_WITH_INDICATOR)
+//        .disable(YAMLGenerator.Feature.SPLIT_LINES);
+//    File yamlOutputFile = new File(yamlOutputFileName);
+//    ObjectMapper mapper = new ObjectMapper(yamlFactory);
+//    mapper.configure(JsonParser.Feature.ALLOW_SINGLE_QUOTES, false);
+//    mapper.writeValue(yamlOutputFile, yamlSerialized);
+  }
+
 //  private void compareResults(
 //      ComparisonResult result,
 //      List<ComparisonError> parsingResultErrors,
@@ -202,7 +246,7 @@ public class ExportResourceEnumerator {
 //    reSerialized.put("result", mapper.valueToTree(result));
 //  }
 
-  private void compareResults(
+  private void compareJsonResults(
       ComparisonResult result
   ) {
     //TODO nothing

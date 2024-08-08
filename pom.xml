@@ -5,12 +5,12 @@
   <parent>
     <groupId>org.metadatacenter</groupId>
     <artifactId>cedar-parent</artifactId>
-    <version>2.6.61</version>
+    <version>2.6.62</version>
   </parent>
 
   <groupId>org.metadatacenter</groupId>
   <artifactId>cedar-model-library-roundtrip</artifactId>
-  <version>2.6.61</version>
+  <version>2.6.62</version>
   <packaging>jar</packaging>
 
   <name>CEDAR Model Library Roundtrip</name>
@@ -61,12 +61,22 @@
         <executions>
 
           <execution>
-            <id>processexport</id>
+            <id>processExportGenerateJson</id>
             <goals>
               <goal>java</goal>
             </goals>
             <configuration>
-              <mainClass>org.metadatacenter.exportconverter.tools.ProcessExport</mainClass>
+              <mainClass>org.metadatacenter.exportconverter.tools.ProcessExportGenerateJson</mainClass>
+            </configuration>
+          </execution>
+
+          <execution>
+            <id>processExportGenerateYaml</id>
+            <goals>
+              <goal>java</goal>
+            </goals>
+            <configuration>
+              <mainClass>org.metadatacenter.exportconverter.tools.ProcessExportGenerateYaml</mainClass>
             </configuration>
           </execution>
 
