@@ -6,6 +6,7 @@ import org.metadatacenter.exportconverter.ExportResourceEnumerator;
 import org.metadatacenter.model.SystemComponent;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
@@ -19,7 +20,7 @@ public class ProcessExportGenerateYaml {
 
     String sourceDir = cedarConfig.getImportExportConfig().getExportDir();
     System.out.println("Source dir:=>" + sourceDir + "<=");
-    String targetDir = cedarConfig.getImportExportConfig().getExportConvertedDir();
+    String targetDir = Path.of(cedarConfig.getImportExportConfig().getExportConvertedDir(), "yaml").toString();
     System.out.println("Target dir:=>" + targetDir + "<=");
 
     ExportResourceEnumerator enumerator = new ExportResourceEnumerator(sourceDir, targetDir);
