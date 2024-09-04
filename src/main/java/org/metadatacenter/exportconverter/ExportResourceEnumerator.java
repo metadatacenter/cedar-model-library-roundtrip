@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import org.metadatacenter.artifacts.model.core.Artifact;
 import org.metadatacenter.artifacts.model.core.ElementSchemaArtifact;
 import org.metadatacenter.artifacts.model.core.FieldSchemaArtifact;
 import org.metadatacenter.artifacts.model.core.TemplateSchemaArtifact;
@@ -156,7 +157,8 @@ public class ExportResourceEnumerator {
     List<ComparisonError> compareResultWarnings = new ArrayList<>();
     ObjectNode parsedContent = null;
     ObjectNode reSerialized = null;
-    LinkedHashMap<String, Object> yamlSerialized = null;
+    //LinkedHashMap<String, Object> yamlSerialized = null;
+    Artifact artifact = null;
 
     Exception exception = null;
 
@@ -184,7 +186,8 @@ public class ExportResourceEnumerator {
               reSerialized = jsonSchemaArtifactRenderer.renderTemplateSchemaArtifact(template);
               compareJsonResults(templateContentComparator.compare(parsedContent, reSerialized));
             } else if (outputFormat == OutputFormat.YAML) {
-              yamlSerialized = yamlArtifactRenderer.renderTemplateSchemaArtifact(template);
+              artifact = template;
+              //yamlSerialized = yamlArtifactRenderer.renderTemplateSchemaArtifact(template);
             }
             break;
           case "element":
@@ -193,7 +196,8 @@ public class ExportResourceEnumerator {
               reSerialized = jsonSchemaArtifactRenderer.renderElementSchemaArtifact(element);
               compareJsonResults(elementContentComparator.compare(parsedContent, reSerialized));
             } else if (outputFormat == OutputFormat.YAML) {
-              yamlSerialized = yamlArtifactRenderer.renderElementSchemaArtifact(element);
+              artifact = element;
+              //yamlSerialized = yamlArtifactRenderer.renderElementSchemaArtifact(element);
             }
             break;
           case "field":
@@ -202,7 +206,8 @@ public class ExportResourceEnumerator {
               reSerialized = jsonSchemaArtifactRenderer.renderFieldSchemaArtifact(field);
               compareJsonResults(fieldContentComparator.compare(parsedContent, reSerialized));
             } else if (outputFormat == OutputFormat.YAML) {
-              yamlSerialized = yamlArtifactRenderer.renderFieldSchemaArtifact(field);
+              artifact = field;
+              //yamlSerialized = yamlArtifactRenderer.renderFieldSchemaArtifact(field);
             }
             break;
           case "instance":
@@ -225,7 +230,7 @@ public class ExportResourceEnumerator {
       if (exception != null) {
         exception.printStackTrace();
       }
-      logResourceYAML(cedarResource, parsedContent, yamlSerialized);
+      logResourceYAML(cedarResource, parsedContent, artifact);
     }
   }
 
@@ -298,8 +303,8 @@ public class ExportResourceEnumerator {
     }
   }
 
-  private void logResourceYAML(CedarExportResource cedarResource, ObjectNode parsedContent, LinkedHashMap<String, Object> yamlSerialized) {
-    logProcessor.saveYAML(cedarResource, parsedContent, yamlSerialized);
+  private void logResourceYAML(CedarExportResource cedarResource, ObjectNode parsedContent, Artifact artifact) {
+    logProcessor.saveYAML(cedarResource, parsedContent, artifact);
     counter++;
     if (counter % 1000 == 0) {
       System.out.println(counter);
