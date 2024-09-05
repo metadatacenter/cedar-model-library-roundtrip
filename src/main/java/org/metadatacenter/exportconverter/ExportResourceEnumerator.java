@@ -66,6 +66,7 @@ public class ExportResourceEnumerator {
     this.instanceContentComparator = new InstanceContentComparator();
     this.artifactReader = new JsonSchemaArtifactReader();
     this.jsonSchemaArtifactRenderer = new JsonSchemaArtifactRenderer();
+    this.yamlArtifactRenderer = new YamlArtifactRenderer(false);
   }
 
   public void parseAndOutputJson() {
@@ -184,7 +185,6 @@ public class ExportResourceEnumerator {
               compareJsonResults(templateContentComparator.compare(parsedContent, reSerialized));
             } else if (outputFormat == OutputFormat.YAML) {
               yamlSerialized = yamlArtifactRenderer.renderTemplateSchemaArtifact(template);
-              handleYamlResults(parsedContent, yamlSerialized);
             }
             break;
           case "element":
@@ -194,7 +194,6 @@ public class ExportResourceEnumerator {
               compareJsonResults(elementContentComparator.compare(parsedContent, reSerialized));
             } else if (outputFormat == OutputFormat.YAML) {
               yamlSerialized = yamlArtifactRenderer.renderElementSchemaArtifact(element);
-              handleYamlResults(parsedContent, yamlSerialized);
             }
             break;
           case "field":
@@ -204,7 +203,6 @@ public class ExportResourceEnumerator {
               compareJsonResults(fieldContentComparator.compare(parsedContent, reSerialized));
             } else if (outputFormat == OutputFormat.YAML) {
               yamlSerialized = yamlArtifactRenderer.renderFieldSchemaArtifact(field);
-              handleYamlResults(parsedContent, yamlSerialized);
             }
             break;
           case "instance":
@@ -219,36 +217,19 @@ public class ExportResourceEnumerator {
       exception = e;
     }
 
-    if (doSave) {
+    if (doSave && outputFormat == OutputFormat.JSON) {
       logErrors(parsingResultErrors, compareResultErrors, compareResultWarnings);
-      logResource(cedarResource, parsedContent, reSerialized, parsingResultErrors, compareResultErrors, compareResultWarnings, exception);
+      logResourceJSON(cedarResource, parsedContent, reSerialized, parsingResultErrors, compareResultErrors, compareResultWarnings, exception);
+    }
+    if (doSave && outputFormat == OutputFormat.YAML) {
+      if (exception != null) {
+        exception.printStackTrace();
+      }
+      logResourceYAML(cedarResource, parsedContent, yamlSerialized);
     }
   }
 
-  private void handleYamlResults(ObjectNode parsedContent, LinkedHashMap<String, Object> yamlSerialized) {
-//    YAMLFactory yamlFactory = new YAMLFactory().disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER)
-//        .enable(YAMLGenerator.Feature.MINIMIZE_QUOTES).enable(YAMLGenerator.Feature.INDENT_ARRAYS_WITH_INDICATOR)
-//        .disable(YAMLGenerator.Feature.SPLIT_LINES);
-//    File yamlOutputFile = new File(yamlOutputFileName);
-//    ObjectMapper mapper = new ObjectMapper(yamlFactory);
-//    mapper.configure(JsonParser.Feature.ALLOW_SINGLE_QUOTES, false);
-//    mapper.writeValue(yamlOutputFile, yamlSerialized);
-  }
-
-//  private void compareResults(
-//      ComparisonResult result,
-//      List<ComparisonError> parsingResultErrors,
-//      List<ComparisonError> compareResultErrors,
-//      List<ComparisonError> compareResultWarnings,
-//      ObjectNode reSerialized) {
-//    compareResultErrors.addAll(result.getComparisonErrors());
-//    compareResultWarnings.addAll(result.getComparisonWarnings());
-//    reSerialized.put("result", mapper.valueToTree(result));
-//  }
-
-  private void compareJsonResults(
-      ComparisonResult result
-  ) {
+  private void compareJsonResults(ComparisonResult result) {
     //TODO nothing
   }
 
@@ -271,9 +252,9 @@ public class ExportResourceEnumerator {
     errorStatsLast2.put(key2, errorStatsLast2.getOrDefault(key2, 0) + 1);
   }
 
-  private void logResource(CedarExportResource cedarResource, JsonNode parsedContent, JsonNode reSerialized,
-                           List<ComparisonError> parsingResultErrors, List<ComparisonError> compareResultErrors,
-                           List<ComparisonError> compareResultWarnings, Exception exception) {
+  private void logResourceJSON(CedarExportResource cedarResource, JsonNode parsedContent, JsonNode reSerialized,
+                               List<ComparisonError> parsingResultErrors, List<ComparisonError> compareResultErrors,
+                               List<ComparisonError> compareResultWarnings, Exception exception) {
     ResourceLog logObject = new ResourceLogBuilder()
         .withOrderNumber(cedarResource.getOrderNumber())
         .withId(cedarResource.getId())
@@ -316,5 +297,14 @@ public class ExportResourceEnumerator {
       System.out.println(counter);
     }
   }
+
+  private void logResourceYAML(CedarExportResource cedarResource, ObjectNode parsedContent, LinkedHashMap<String, Object> yamlSerialized) {
+    logProcessor.saveYAML(cedarResource, parsedContent, yamlSerialized);
+    counter++;
+    if (counter % 1000 == 0) {
+      System.out.println(counter);
+    }
+  }
+
 
 }
