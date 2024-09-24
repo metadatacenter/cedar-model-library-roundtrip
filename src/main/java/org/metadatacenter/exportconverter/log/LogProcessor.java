@@ -3,7 +3,7 @@ package org.metadatacenter.exportconverter.log;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.metadatacenter.artifacts.model.core.Artifact;
-import org.metadatacenter.artifacts.model.tools.YamlRenderer;
+import org.metadatacenter.artifacts.model.tools.YamlSerializer;
 import org.metadatacenter.exportconverter.model.CedarExportResource;
 import org.metadatacenter.exportconverter.tools.PrettyObjectMapper;
 
@@ -65,7 +65,7 @@ public class LogProcessor {
     Path filePath = Paths.get(shardFolder, uuid + ".yaml");
     try {
       Files.createDirectories(filePath.getParent());
-      YamlRenderer.saveYAML(artifact, filePath);
+      YamlSerializer.saveYAML(artifact, false, filePath);
     } catch (IOException e) {
       e.printStackTrace();
     }
