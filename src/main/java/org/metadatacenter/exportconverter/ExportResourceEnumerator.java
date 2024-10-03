@@ -8,8 +8,8 @@ import org.metadatacenter.artifacts.model.core.Artifact;
 import org.metadatacenter.artifacts.model.core.ElementSchemaArtifact;
 import org.metadatacenter.artifacts.model.core.FieldSchemaArtifact;
 import org.metadatacenter.artifacts.model.core.TemplateSchemaArtifact;
-import org.metadatacenter.artifacts.model.reader.JsonSchemaArtifactReader;
-import org.metadatacenter.artifacts.model.renderer.JsonSchemaArtifactRenderer;
+import org.metadatacenter.artifacts.model.reader.JsonArtifactReader;
+import org.metadatacenter.artifacts.model.renderer.JsonArtifactRenderer;
 import org.metadatacenter.artifacts.model.renderer.YamlArtifactRenderer;
 import org.metadatacenter.exportconverter.comparator.ElementContentComparator;
 import org.metadatacenter.exportconverter.comparator.FieldContentComparator;
@@ -48,8 +48,8 @@ public class ExportResourceEnumerator {
   private static ElementContentComparator elementContentComparator;
   private static FieldContentComparator fieldContentComparator;
   private static InstanceContentComparator instanceContentComparator;
-  private static JsonSchemaArtifactReader artifactReader;
-  private static JsonSchemaArtifactRenderer jsonSchemaArtifactRenderer;
+  private static JsonArtifactReader artifactReader;
+  private static JsonArtifactRenderer jsonSchemaArtifactRenderer;
 
   private static YamlArtifactRenderer yamlArtifactRenderer;
 
@@ -65,8 +65,8 @@ public class ExportResourceEnumerator {
     this.elementContentComparator = new ElementContentComparator();
     this.fieldContentComparator = new FieldContentComparator();
     this.instanceContentComparator = new InstanceContentComparator();
-    this.artifactReader = new JsonSchemaArtifactReader();
-    this.jsonSchemaArtifactRenderer = new JsonSchemaArtifactRenderer();
+    this.artifactReader = new JsonArtifactReader();
+    this.jsonSchemaArtifactRenderer = new JsonArtifactRenderer();
     this.yamlArtifactRenderer = new YamlArtifactRenderer(false);
   }
 
