@@ -2,15 +2,15 @@ package org.metadatacenter.exportconverter.log;
 
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.metadatacenter.artifacts.model.core.Artifact;
+import org.metadatacenter.artifacts.model.tools.YamlSerializer;
 import org.metadatacenter.exportconverter.model.CedarExportResource;
 import org.metadatacenter.exportconverter.tools.PrettyObjectMapper;
-import org.metadatacenter.exportconverter.tools.YamlObjectMapper;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.LinkedHashMap;
 
 public class LogProcessor {
   private String folderPrefix;
@@ -55,7 +55,7 @@ public class LogProcessor {
     prettyObjectWriter.writeValue(filePath.toFile(), logObject);
   }
 
-  public void saveYAML(CedarExportResource cedarResource, ObjectNode parsedContent, LinkedHashMap<String, Object> yamlSerialized) {
+  public void saveYAML(CedarExportResource cedarResource, ObjectNode parsedContent, Artifact artifact) {
     String uuid = extractUUID(cedarResource.getId());
     if (uuid == null) {
       System.err.println("Invalid ID format, UUID not found");
@@ -65,7 +65,7 @@ public class LogProcessor {
     Path filePath = Paths.get(shardFolder, uuid + ".yaml");
     try {
       Files.createDirectories(filePath.getParent());
-      YamlObjectMapper.YAML_OBJECT_MAPPER.writeValue(filePath.toFile(), yamlSerialized);
+      YamlSerializer.saveYAML(artifact, false, filePath);
     } catch (IOException e) {
       e.printStackTrace();
     }
