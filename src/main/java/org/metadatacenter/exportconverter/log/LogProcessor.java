@@ -65,7 +65,7 @@ public class LogProcessor {
     Path filePath = Paths.get(shardFolder, uuid + ".yaml");
     try {
       Files.createDirectories(filePath.getParent());
-      YamlSerializer.saveYAML(artifact, false, filePath);
+      YamlSerializer.saveYAML(artifact, false, true, filePath);
     } catch (IOException e) {
       e.printStackTrace();
     }
